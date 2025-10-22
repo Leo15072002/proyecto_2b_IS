@@ -12,5 +12,12 @@ public class App {
         get("/hello", (req, res) -> "¡Hola Mundo desde Spark Java!");
 
         System.out.println("Servidor corriendo en http://localhost:4567");
+
+       get("/login", (req, res) -> "¡ventana de login!");
+
+        System.out.println("Servidor corriendo en http://localhost:4567");
+
+
+
     }
 }
