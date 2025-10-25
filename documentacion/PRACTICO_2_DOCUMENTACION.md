@@ -8,7 +8,7 @@ Este repositorio contiene el trabajo práctico 2B, fork del proyecto base de la 
 * Leonardo Campos
 * Yaideem Testa
 * Tomas Monzon
-* Manuel Barbieri
+* Manuel Barbieri Pariani
 
 ---
 
