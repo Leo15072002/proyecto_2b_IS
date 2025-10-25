@@ -18,8 +18,8 @@ A continuación, se documenta el análisis solicitado sobre el patrón de diseñ
 
 ### 1. ¿Qué patrón identificaron?
 
-El patrón de diseño que identificamos en el código base es el **[Nombre del Patrón]**. 
-(Por ejemplo: *Patrón DAO (Data Access Object)*, *Patrón Singleton*, *Patrón Factory Method*, *Patrón MVC*, etc.)
+Se necesita un único punto de acceso centralizado a la información académica de la universidad, que permita consultar y actualizar los datos dentro de una misma instancia de gestión.
+El patrón Singleton garantiza que exista una sola instancia de la clase encargada de controlar el acceso a los datos compartidos, asegurando que todos los usuarios trabajen sobre la misma fuente de información y se mantenga la coherencia en el sistema.
 
 ### 2. ¿Dónde y cómo se aplica en el código?
 
