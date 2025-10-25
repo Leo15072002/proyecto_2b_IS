@@ -8,7 +8,7 @@ Este repositorio contiene el trabajo práctico 2B, fork del proyecto base de la 
 * Leonardo Campos
 * Yaideem Testa
 * Tomas Monzon
-* Manuel Barbieri Pariani
+* Manuel Barbieri 
 
 ---
 
@@ -31,5 +31,4 @@ Luego, App usa esta instancia para abrir y cerrar la conexión de ActiveJDBC (Ba
 
 ### 3. ¿Qué problema resuelve este patrón en ese contexto?
 
-En el contexto específico del sistema de gestión estudiantil (particularmente en el login y gestión de usuarios), este patrón resuelve el problema de...
-(Por ejemplo: *...asegurar una única conexión a la base de datos*, o *...desacoplar la lógica de la aplicación de cómo se guardan los datos*, o *...centralizar la creación de objetos de tipo Usuario*).
+En el contexto específico del sistema de gestión estudiantil (particularmente en el login y gestión de usuarios), este patrón resuelve el problema de garantizar una unica fuente de configuración: la aplicación solo necesita una configuración de base de datos (una URL, un driver, un usuario). Si permitieras crear múltiples instancias (new DBConfigSingleton()), podrías tener accidentalmente diferentes partes de tu aplicación intentando conectarse a bases de datos distintas o con credenciales diferentes. El Singleton fuerza a que solo exista un objeto de configuración.
