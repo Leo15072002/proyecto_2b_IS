@@ -23,12 +23,11 @@ El patrón de diseño que identificamos en el código base es el **[Nombre del P
 
 ### 2. ¿Dónde y cómo se aplica en el código?
 
+Se ve reflejado principalmente en la clase DBConfigSingleton, ya que posee el constructor privado "DBConfigSingleton()" y ademas tambien el getInstance() de tipo DBConfigSingleton (la misma clase), donde corrobora que la instancia esté creada o la crea, en caso contrario, retorna dicha instanciaa
 Este patrón se puede observar principalmente en las siguientes clases y paquetes:
-* `src/main/java/com/paquete/ejemplo/ClaseDondeEstaElPatron.java`
-* `src/main/java/com/paquete/ejemplo/OtraClaseQueLoUsa.java`
+* `src/main/java/com/paquete/is1/proyecto/config/DBConfigSingleton`
 
-Se implementa de la siguiente manera: 
-(Aquí explican con sus palabras cómo funciona. Por ejemplo: *La clase `X` tiene un método estático `getInstance()` que asegura que solo exista una instancia...* o *La clase `UsuarioDAO` implementa una interfaz `DAO` que define los métodos CRUD (Crear, Leer, Actualizar, Borrar) para separar la lógica de negocio del acceso a la base de datos...*)
+Luego, App usa esta instancia para abrir y cerrar la conexión de ActiveJDBC (Base.open y Base.close) dentro de los filtros before y after de Spark, asegurando que todos los procesos utilicen la misma configuración.
 
 ### 3. ¿Qué problema resuelve este patrón en ese contexto?
 
