@@ -21,6 +21,9 @@ A continuación, se documenta el análisis solicitado sobre el patrón de diseñ
 El patrón de diseño que identificamos en el código base es el **[Nombre del Patrón]**. 
 (Por ejemplo: *Patrón DAO (Data Access Object)*, *Patrón Singleton*, *Patrón Factory Method*, *Patrón MVC*, etc.)
 
+Se necesita un único punto de acceso centralizado a la información académica de la universidad. Se debe consultar y actualizar datos dentro de una misma instancia de gestión.
+Este patrón garantiza que exista una sola instancia de la clase encargada de controlar el acceso de los datos compartidos y que todos los usuarios trabajen sobre la misma fuente de información.
+
 ### 2. ¿Dónde y cómo se aplica en el código?
 
 Se ve reflejado principalmente en la clase DBConfigSingleton, ya que posee el constructor privado "DBConfigSingleton()" y ademas tambien el getInstance() de tipo DBConfigSingleton (la misma clase), donde corrobora que la instancia esté creada o la crea, en caso contrario, retorna dicha instanciaa
