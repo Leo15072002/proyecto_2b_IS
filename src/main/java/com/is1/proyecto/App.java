@@ -71,6 +71,19 @@ public class App {
 
         // --- Rutas GET para renderizar formularios y páginas HTML ---
 
+        get("/professor/create", (req, res) -> {
+            Map<String, Object> model = new HashMap<>();
+            String successMessage = req.queryParams("message");
+            if (successMessage != null && !successMessage.isEmpty()) {
+                  model.put("successMessage", successMessage);
+            }
+            String errorMessage = req.queryParams("error");
+            if (errorMessage != null && !errorMessage.isEmpty()) {
+                 model.put("errorMessage", errorMessage);
+            }
+            return new ModelAndView(model, "professor_form.mustache");
+        }, new MustacheTemplateEngine());
+
         // GET: Muestra el formulario de creación de cuenta.
         // Soporta la visualización de mensajes de éxito o error pasados como query parameters.
         get("/user/create", (req, res) -> {
@@ -292,6 +305,56 @@ public class App {
                 return objectMapper.writeValueAsString(Map.of("error", "Error interno al registrar usuario: " + e.getMessage()));
             }
         });
+
+        post("/professor/create", (req, res) -> {
+
+        String nombre = req.queryParams("nombre");
+        String apellido = req.queryParams("apellido");
+        String correo = req.queryParams("correo");
+        String dni = req.queryParams("dni");
+
+        if (nombre == null || nombre.isEmpty() ||
+            apellido == null || apellido.isEmpty() ||
+            correo == null || correo.isEmpty() ||
+            dni == null || dni.isEmpty()) {
+            res.redirect("/professor/create?error=Faltan campos obligatorios.");
+            return null;
+        }
+
+        if (!correo.contains("@") || !correo.contains(".")) {
+            res.redirect("/professor/create?error=El correo no es válido.");
+            return null;
+        }
+
+        try {
+            Professor existingDni = Professor.findFirst("dni = ?", dni);
+            if (existingDni != null) {
+                res.redirect("/professor/create?error=El DNI ya está registrado en la base de datos.");
+                return null;
+            }   
+
+            Professor existingCorreo = Professor.findFirst("correo = ?", correo);
+            if (existingCorreo != null) {
+                res.redirect("/professor/create?error=El correo ya está registrado en la base de datos.");
+                return null;
+            }   
+
+            Professor newProfessor = new Professor();
+            newProfessor.set("nombre", nombre);
+            newProfessor.set("apellido", apellido);
+            newProfessor.set("correo", correo);
+            newProfessor.set("dni", dni);
+            newProfessor.saveIt();  
+
+            res.redirect("/professor/create?message=Profesor " + nombre + " " + apellido + " dado de alta exitosamente.");
+            return null;
+        } catch (Exception e) {
+            System.err.println("[ERROR Profesor] " + e.getClass().getSimpleName() + ": " + e.getMessage());
+            e.printStackTrace();
+            res.redirect("/professor/create?error=Ocurrió un error inesperado al guardar el profesor. Intente de nuevo más tarde.");
+            return null;
+        }
+    });
 
     } // Fin del método main
 } // Fin de la clase App
