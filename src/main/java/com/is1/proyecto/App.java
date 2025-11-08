@@ -69,6 +69,19 @@ public class App {
 
         // --- Rutas GET para renderizar formularios y páginas HTML ---
 
+        get("/professor/create", (req, res) -> {
+            Map<String, Object> model = new HashMap<>();
+            String successMessage = req.queryParams("message");
+            if (successMessage != null && !successMessage.isEmpty()) {
+                  model.put("successMessage", successMessage);
+            }
+            String errorMessage = req.queryParams("error");
+            if (errorMessage != null && !errorMessage.isEmpty()) {
+                 model.put("errorMessage", errorMessage);
+            }
+            return new ModelAndView(model, "professor_form.mustache");
+        }, new MustacheTemplateEngine());
+
         // GET: Muestra el formulario de creación de cuenta.
         // Soporta la visualización de mensajes de éxito o error pasados como query parameters.
         get("/user/create", (req, res) -> {
