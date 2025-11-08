@@ -306,53 +306,53 @@ public class App {
 
         post("/professor/create", (req, res) -> {
 
-    String nombre = req.queryParams("nombre");
-    String apellido = req.queryParams("apellido");
-    String correo = req.queryParams("correo");
-    String dni = req.queryParams("dni");
+        String nombre = req.queryParams("nombre");
+        String apellido = req.queryParams("apellido");
+        String correo = req.queryParams("correo");
+        String dni = req.queryParams("dni");
 
-    if (nombre == null || nombre.isEmpty() ||
-        apellido == null || apellido.isEmpty() ||
-        correo == null || correo.isEmpty() ||
-        dni == null || dni.isEmpty()) {
-        res.redirect("/professor/create?error=Faltan campos obligatorios.");
-        return null;
-    }
-
-    if (!correo.contains("@") || !correo.contains(".")) {
-        res.redirect("/professor/create?error=El correo no es válido.");
-        return null;
-    }
-
-    try {
-        Professor existingDni = Professor.findFirst("dni = ?", dni);
-        if (existingDni != null) {
-            res.redirect("/professor/create?error=El DNI ya está registrado en la base de datos.");
+        if (nombre == null || nombre.isEmpty() ||
+            apellido == null || apellido.isEmpty() ||
+            correo == null || correo.isEmpty() ||
+            dni == null || dni.isEmpty()) {
+            res.redirect("/professor/create?error=Faltan campos obligatorios.");
             return null;
         }
 
-        Professor existingCorreo = Professor.findFirst("correo = ?", correo);
-        if (existingCorreo != null) {
-            res.redirect("/professor/create?error=El correo ya está registrado en la base de datos.");
+        if (!correo.contains("@") || !correo.contains(".")) {
+            res.redirect("/professor/create?error=El correo no es válido.");
             return null;
         }
 
-        Professor newProfessor = new Professor();
-        newProfessor.set("nombre", nombre);
-        newProfessor.set("apellido", apellido);
-        newProfessor.set("correo", correo);
-        newProfessor.set("dni", dni);
-        newProfessor.saveIt();
+        try {
+            Professor existingDni = Professor.findFirst("dni = ?", dni);
+            if (existingDni != null) {
+                res.redirect("/professor/create?error=El DNI ya está registrado en la base de datos.");
+                return null;
+            }   
 
-        res.redirect("/professor/create?message=Profesor " + nombre + " " + apellido + " dado de alta exitosamente.");
-        return null;
-    } catch (Exception e) {
-        System.err.println("Error al registrar el profesor: " + e.getMessage());
-        e.printStackTrace();
-        res.redirect("/professor/create?error=Error interno al guardar. Intente de nuevo.");
-        return null;
-    }
-});
+            Professor existingCorreo = Professor.findFirst("correo = ?", correo);
+            if (existingCorreo != null) {
+                res.redirect("/professor/create?error=El correo ya está registrado en la base de datos.");
+                return null;
+            }   
+
+            Professor newProfessor = new Professor();
+            newProfessor.set("nombre", nombre);
+            newProfessor.set("apellido", apellido);
+            newProfessor.set("correo", correo);
+            newProfessor.set("dni", dni);
+            newProfessor.saveIt();  
+
+            res.redirect("/professor/create?message=Profesor " + nombre + " " + apellido + " dado de alta exitosamente.");
+            return null;
+        } catch (Exception e) {
+            System.err.println("[ERROR Profesor] " + e.getClass().getSimpleName() + ": " + e.getMessage());
+            e.printStackTrace();
+            res.redirect("/professor/create?error=Ocurrió un error inesperado al guardar el profesor. Intente de nuevo más tarde.");
+            return null;
+        }
+    });
 
     } // Fin del método main
 } // Fin de la clase App
