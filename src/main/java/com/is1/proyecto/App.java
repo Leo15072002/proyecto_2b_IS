@@ -69,8 +69,14 @@ public class App {
         });
 
         // --- Rutas GET para renderizar formularios y páginas HTML ---
+        
 
         get("/professor/create", (req, res) -> {
+            String role = req.session().attribute("role");
+            if (role == null || !role.equals("admin")) {
+                res.redirect("/?error=No tienes permiso para acceder a esta página.");
+                return null;
+            }
             Map<String, Object> model = new HashMap<>();
             String successMessage = req.queryParams("message");
             if (successMessage != null && !successMessage.isEmpty()) {
@@ -107,6 +113,7 @@ public class App {
         // GET: Ruta para mostrar el dashboard (panel de control) del usuario.
         // Requiere que el usuario esté autenticado.
         get("/dashboard", (req, res) -> {
+            
             Map<String, Object> model = new HashMap<>(); // Modelo para la plantilla del dashboard.
 
             // Intenta obtener el nombre de usuario y la bandera de login de la sesión.
@@ -248,6 +255,8 @@ public class App {
                 req.session().attribute("userId", ac.getId()); // Guarda el ID de la cuenta en la sesión (útil).
                 req.session().attribute("loggedIn", true); // Establece una bandera para indicar que el usuario está logueado.
 
+                req.session().attribute("role", ac.getString("role")); // Modifique login para guardar "role" en sesion
+
                 System.out.println("DEBUG: Login exitoso para la cuenta: " + username);
                 System.out.println("DEBUG: ID de Sesión: " + req.session().id());
 
@@ -306,6 +315,12 @@ public class App {
         });
 
         post("/professor/create", (req, res) -> {
+
+        String role = req.session().attribute("role");
+        if (role == null || !role.equals("admin")) {
+            res.redirect("/?error=No tienes permiso para realizar esta acción.");
+            return null;
+        }
 
         String nombre = req.queryParams("nombre");
         String apellido = req.queryParams("apellido");

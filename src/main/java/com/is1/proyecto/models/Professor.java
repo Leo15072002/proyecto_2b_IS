@@ -11,10 +11,7 @@ public class Professor extends Model {
 
     public String getApellido() { return getString("apellido"); }
     public void setApellido(String apellido) { set("apellido", apellido); }
-
-    public String getPassword() { return getString("password"); }
-    public void setPaswword(String password) { set("password", password); }
-
+    
     public String getCorreo() { return getString("correo"); }
     public void setCorreo(String correo) { set("correo", correo); }
 
