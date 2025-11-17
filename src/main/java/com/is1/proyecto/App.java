@@ -35,6 +35,8 @@ public class App {
      * Aquí se configuran todas las rutas y filtros de Spark.
      */
     public static void main(String[] args) {
+        
+        
         port(8080); // Configura el puerto en el que la aplicación Spark escuchará las peticiones (por defecto es 4567).
 
         // Obtener la instancia única del singleton de configuración de la base de datos.
@@ -71,6 +73,11 @@ public class App {
         // --- Rutas GET para renderizar formularios y páginas HTML ---
 
         get("/professor/create", (req, res) -> {
+            String role = req.session().attribute("role");
+            if(role == null || !role.equals("admin")){
+                res.redirect("/?error=No tienes permiso para acceder a esta página.");
+                return null;
+            }
             Map<String, Object> model = new HashMap<>();
             String successMessage = req.queryParams("message");
             if (successMessage != null && !successMessage.isEmpty()) {
@@ -112,6 +119,7 @@ public class App {
             // Intenta obtener el nombre de usuario y la bandera de login de la sesión.
             String currentUsername = req.session().attribute("currentUserUsername");
             Boolean loggedIn = req.session().attribute("loggedIn");
+            String role = req.session().attribute("role");  //obtiene la bandera de admin 
 
             // 1. Verificar si el usuario ha iniciado sesión.
             // Si no hay un nombre de usuario en la sesión, la bandera es nula o falsa,
@@ -125,6 +133,7 @@ public class App {
 
             // 2. Si el usuario está logueado, añade el nombre de usuario al modelo para la plantilla.
             model.put("username", currentUsername);
+            model.put("isAdmin", "admin".equals(role)); //añade a la plantilla admin
 
             // 3. Renderiza la plantilla del dashboard con el nombre de usuario.
             return new ModelAndView(model, "dashboard.mustache");
@@ -228,28 +237,27 @@ public class App {
             }
 
             try {
-                // Intenta crear y guardar la nueva cuenta en la base de datos.
-                Professor ac = new Professor(); // Crea una nueva instancia del modelo User.
+                
+                Professor ac = new Professor();
 
                 ac.set("nombre", nombre);
                 ac.set("apellido", apellido);
                 ac.set("correo", correo);
                 ac.set("dni", dni);
-                ac.saveIt(); // Guarda el nuevo usuario en la tabla 'users'.
+                ac.saveIt();
 
-                res.status(201); // Código de estado HTTP 201 (Created) para una creación exitosa.
-                // Redirige al formulario de creación con un mensaje de éxito.
+                res.status(201);
+                
                 res.redirect("/professor/create?message=Cuenta creada exitosamente para el profe " + nombre + "!");
-                return ""; // Retorna una cadena vacía.
+                return "";
 
             } catch (Exception e) {
-                // Si ocurre cualquier error durante la operación de DB (ej. nombre de usuario duplicado),
-                // se captura aquí y se redirige con un mensaje de error.
+
                 System.err.println("Error al registrar la cuenta: " + e.getMessage());
-                e.printStackTrace(); // Imprime el stack trace para depuración.
-                res.status(500); // Código de estado HTTP 500 (Internal Server Error).
+                e.printStackTrace(); 
+                res.status(500); 
                 res.redirect("/professsor/create?error=Error interno al crear la cuenta. Intente de nuevo.");
-                return ""; // Retorna una cadena vacía.
+                return ""; 
             }
         });
 
@@ -291,6 +299,7 @@ public class App {
                 req.session(true).attribute("currentUserUsername", username); // Guarda el nombre de usuario en la sesión.
                 req.session().attribute("userId", ac.getId()); // Guarda el ID de la cuenta en la sesión (útil).
                 req.session().attribute("loggedIn", true); // Establece una bandera para indicar que el usuario está logueado.
+                req.session().attribute("role", ac.getString("role")); //Modifique login para guardar "role" en sesion
 
                 System.out.println("DEBUG: Login exitoso para la cuenta: " + username);
                 System.out.println("DEBUG: ID de Sesión: " + req.session().id());
@@ -350,6 +359,12 @@ public class App {
         });
 
         post("/professor/create", (req, res) -> {
+
+            String role = req.session().attribute("role");
+            if (role == null || !role.equals("admin")) {
+                res.redirect("/?error=No tienes permiso para realizar esta acción.");
+                return null;
+            }
 
             String nombre = req.queryParams("nombre");
             String apellido = req.queryParams("apellido");
