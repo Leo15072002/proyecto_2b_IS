@@ -5,5 +5,22 @@ DROP TABLE IF EXISTS users;
 CREATE TABLE users (
     id INTEGER PRIMARY KEY AUTOINCREMENT, -- Clave primaria autoincremental para SQLite
     name TEXT NOT NULL UNIQUE,          -- Nombre de usuario (TEXT es el tipo de cadena recomendado para SQLite), con restricción UNIQUE
-    password TEXT NOT NULL           -- Contraseña hasheada (TEXT es el tipo de cadena recomendado para SQLite)
+    password TEXT NOT NULL,           -- Contraseña hasheada (TEXT es el tipo de cadena recomendado para SQLite)
+    role TEXT NOT NULL DEFAULT        -- Rol que determina a un usuario o administrador
+);
+
+
+DROP TABLE IF EXISTS professors;
+
+CREATE TABLE professors (
+    id INTEGER,
+    password TEXT NOT NULL,
+    nombre TEXT NOT NULL UNIQUE,
+    apellido TEXT NOT NULL,
+    correo TEXT NOT NULL,
+    dni INTEGER NOT NULL PRIMARY KEY,
+
+    CONSTRAINT fk_id_professors FOREIGN KEY (id) REFERENCES users(id);
+    ON DELETE CASCADE
+    ON UPDATE CASCADE
 );
