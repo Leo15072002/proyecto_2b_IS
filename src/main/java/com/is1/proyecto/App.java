@@ -305,9 +305,8 @@ public class App {
                 System.out.println("DEBUG: ID de Sesión: " + req.session().id());
 
 
-                model.put("username", username); // Añade el nombre de usuario al modelo para el dashboard.
-                // Renderiza la plantilla del dashboard tras un login exitoso.
-                return new ModelAndView(model, "dashboard.mustache");
+                res.redirect("/dashboard");
+                return null;
             } else {
                 // Contraseña incorrecta.
                 res.status(401); // Unauthorized.
