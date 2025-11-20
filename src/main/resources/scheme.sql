@@ -13,14 +13,12 @@ CREATE TABLE users (
 DROP TABLE IF EXISTS professors;
 
 CREATE TABLE professors (
-    id INTEGER,
-    password TEXT NOT NULL,
-    nombre TEXT NOT NULL UNIQUE,
+    id INTEGER NOT NULL,
+    nombre TEXT NOT NULL,
     apellido TEXT NOT NULL,
-    correo TEXT NOT NULL,
+    correo TEXT NOT NULL UNIQUE,
     dni INTEGER NOT NULL PRIMARY KEY,
-
-    CONSTRAINT fk_id_professors FOREIGN KEY (id) REFERENCES users(id);
-    ON DELETE CASCADE
-    ON UPDATE CASCADE
+    FOREIGN KEY (id) REFERENCES users(id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
 );

@@ -359,58 +359,83 @@ public class App {
 
         post("/professor/create", (req, res) -> {
 
+            // Solo administradores pueden crear profesores
             String role = req.session().attribute("role");
             if (role == null || !role.equals("admin")) {
                 res.redirect("/?error=No tienes permiso para realizar esta acción.");
                 return null;
             }
 
+            // Campos del formulario
             String nombre = req.queryParams("nombre");
             String apellido = req.queryParams("apellido");
             String correo = req.queryParams("correo");
             String dni = req.queryParams("dni");
-            
+
+            // Validaciones básicas
             if (nombre == null || nombre.isEmpty() ||
                 apellido == null || apellido.isEmpty() ||
                 correo == null || correo.isEmpty() ||
                 dni == null || dni.isEmpty()) {
+
                 res.redirect("/professor/create?error=Faltan campos obligatorios.");
                 return null;
             }
-        
+
             if (!correo.contains("@") || !correo.contains(".")) {
-                res.redirect("/professor/create?error=El correo no es válido.");
+                res.redirect("/professor/create?error=Correo no válido.");
                 return null;
             }
-        
+
             try {
-                Professor existingDni = Professor.findFirst("dni = ?", dni);
-                if (existingDni != null) {
-                    res.redirect("/professor/create?error=El DNI ya está registrado en la base de datos.");
+                // Verificar DNI único
+                if (Professor.findFirst("dni = ?", dni) != null) {
+                    res.redirect("/professor/create?error=El DNI ya está registrado.");
                     return null;
-                }   
-            
-                Professor existingCorreo = Professor.findFirst("correo = ?", correo);
-                if (existingCorreo != null) {
-                    res.redirect("/professor/create?error=El correo ya está registrado en la base de datos.");
+                }
+
+                // Verificar correo único
+                if (Professor.findFirst("correo = ?", correo) != null) {
+                    res.redirect("/professor/create?error=El correo ya está registrado.");
                     return null;
-                }   
-            
-                Professor newProfessor = new Professor();
-                newProfessor.set("nombre", nombre);
-                newProfessor.set("apellido", apellido);
-                newProfessor.set("correo", correo);
-                newProfessor.set("dni", dni);
-                newProfessor.saveIt();
-            
-                res.redirect("/professor/create?message=Profesor " + nombre + " " + apellido + " dado de alta exitosamente.");
+                }
+
+                // nombre de usuario = inicial nombre + apellido
+                String username =
+                    nombre.substring(0, 1).toUpperCase() +
+                    apellido;
+
+                //Contraseña = últimos 4 dígitos del DNI
+                String last4 = dni.substring(dni.length() - 4);
+                String hashedPassword = BCrypt.hashpw(last4, BCrypt.gensalt());
+
+                // insercion para user
+                User newUser = new User();
+                newUser.set("name", username);
+                newUser.set("password", hashedPassword);
+                newUser.set("role", "professor"); 
+                newUser.saveIt();
+
+                int userId = newUser.getInteger("id");
+
+                //insercion para profesor 
+                Professor prof = new Professor();
+                prof.set("id", userId);
+                prof.set("nombre", nombre);
+                prof.set("apellido", apellido);
+                prof.set("correo", correo);
+                prof.set("dni", dni);
+                prof.saveIt();
+
+                res.redirect("/professor/create?message=Profesor creado. Usuario: " 
+                             + username + " Contraseña: " + last4);
                 return null;
+
             } catch (Exception e) {
-                System.err.println("[ERROR Profesor] " + e.getClass().getSimpleName() + ": " + e.getMessage());
                 e.printStackTrace();
-                res.redirect("/professor/create?error=Ocurrió un error inesperado al guardar el profesor. Intente de nuevo más tarde.");
+                res.redirect("/professor/create?error=Error inesperado.");
                 return null;
             }
         });
-    } // Fin del método main
-} // Fin de la clase App
+    } 
+}
