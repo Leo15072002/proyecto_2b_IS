@@ -18,6 +18,7 @@ CREATE TABLE professors (
     apellido TEXT NOT NULL,
     correo TEXT NOT NULL UNIQUE,
     dni INTEGER NOT NULL PRIMARY KEY,
+    
     FOREIGN KEY (id) REFERENCES users(id)
         ON DELETE CASCADE
         ON UPDATE CASCADE

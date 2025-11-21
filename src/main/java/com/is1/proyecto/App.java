@@ -66,7 +66,7 @@ public class App {
                 Base.close();
             } catch (Exception e) {
                 // Si ocurre un error al cerrar la conexión, se registra.
-                System.err.println("Error al cerrar conexión con ActiveJDBC: " + e.getMessage());
+                System.err.println("Error al cerrar conexion con ActiveJDBC: " + e.getMessage());
             }
         });
 
@@ -75,7 +75,7 @@ public class App {
         get("/professor/create", (req, res) -> {
             String role = req.session().attribute("role");
             if(role == null || !role.equals("admin")){
-                res.redirect("/?error=No tienes permiso para acceder a esta página.");
+                res.redirect("/?error=No tienes permiso para acceder a esta pagina.");
                 return null;
             }
             Map<String, Object> model = new HashMap<>();
@@ -116,6 +116,16 @@ public class App {
         get("/dashboard", (req, res) -> {
             Map<String, Object> model = new HashMap<>(); // Modelo para la plantilla del dashboard.
 
+            String successMessage = req.queryParams("message");
+            if (successMessage != null && !successMessage.isEmpty()) {
+                model.put("successMessage", successMessage);
+            }
+
+            String errorMessage = req.queryParams("error");
+            if (errorMessage != null && !errorMessage.isEmpty()) {
+                model.put("errorMessage", errorMessage);
+            }
+
             // Intenta obtener el nombre de usuario y la bandera de login de la sesión.
             String currentUsername = req.session().attribute("currentUserUsername");
             Boolean loggedIn = req.session().attribute("loggedIn");
@@ -127,7 +137,7 @@ public class App {
             if (currentUsername == null || loggedIn == null || !loggedIn) {
                 System.out.println("DEBUG: Acceso no autorizado a /dashboard. Redirigiendo a /login.");
                 // Redirige al login con un mensaje de error.
-                res.redirect("/login?error=Debes iniciar sesión para acceder a esta página.");
+                res.redirect("/login?error=Debes iniciar sesión para acceder a esta pagina.");
                 return null; // Importante retornar null después de una redirección.
             }
 
@@ -191,7 +201,7 @@ public class App {
             if (name == null || name.isEmpty() || password == null || password.isEmpty()) {
                 res.status(400); // Código de estado HTTP 400 (Bad Request).
                 // Redirige al formulario de creación con un mensaje de error.
-                res.redirect("/user/create?error=Nombre y contraseña son requeridos.");
+                res.redirect("/user/create?error=Nombre y contrasenia son requeridos.");
                 return ""; // Retorna una cadena vacía ya que la respuesta ya fue redirigida.
             }
 
@@ -222,42 +232,82 @@ public class App {
         });
 
         post("/professor/new", (req, res) -> {
+           // Solo administradores pueden crear profesores
+            String role = req.session().attribute("role");
+            if (role == null || !role.equals("admin")) {
+                res.redirect("/?error=No tienes permiso para realizar esta accion.");
+                return null;
+            }
+
+            // Campos del formulario
             String nombre = req.queryParams("nombre");
             String apellido = req.queryParams("apellido");
             String correo = req.queryParams("correo");
             String dni = req.queryParams("dni");
 
-            // Validaciones básicas: campos no pueden ser nulos o vacíos.
-            if (nombre == null || nombre.isEmpty() || apellido == null || apellido.isEmpty() || 
-                    correo == null || correo.isEmpty() || dni == null || dni.isEmpty()) {
-                res.status(400); // Código de estado HTTP 400 (Bad Request).
-                // Redirige al formulario de creación con un mensaje de error.
-                res.redirect("/professor/create?error=Complete todas las celdas por favor.");
-                return ""; // Retorna una cadena vacía ya que la respuesta ya fue redirigida.
+            // Validaciones básicas
+            if (nombre == null || nombre.isEmpty() ||
+                apellido == null || apellido.isEmpty() ||
+                correo == null || correo.isEmpty() ||
+                dni == null || dni.isEmpty()) {
+
+                res.redirect("/professor/create?error=Faltan campos obligatorios.");
+                return null;
+            }
+
+            if (!correo.contains("@") || !correo.contains(".")) {
+                res.redirect("/professor/create?error=Correo no valido.");
+                return null;
             }
 
             try {
-                
-                Professor ac = new Professor();
+                // Verificar DNI único
+                if (Professor.findFirst("dni = ?", dni) != null) {
+                    res.redirect("/professor/create?error=El DNI ya esta registrado.");
+                    return null;
+                }
 
-                ac.set("nombre", nombre);
-                ac.set("apellido", apellido);
-                ac.set("correo", correo);
-                ac.set("dni", dni);
-                ac.saveIt();
+                // Verificar correo único
+                if (Professor.findFirst("correo = ?", correo) != null) {
+                    res.redirect("/professor/create?error=El correo ya esta registrado.");
+                    return null;
+                }
 
-                res.status(201);
-                
-                res.redirect("/professor/create?message=Cuenta creada exitosamente para el profe " + nombre + "!");
+                // nombre de usuario = inicial nombre + apellido
+                String username =
+                    nombre.substring(0, 1).toUpperCase() +
+                    apellido;
+
+                //Contraseña = últimos 4 dígitos del DNI
+                String last4 = dni.substring(dni.length() - 4);
+                String hashedPassword = BCrypt.hashpw(last4, BCrypt.gensalt());
+
+                // insercion para user
+                User newUser = new User();
+                newUser.set("name", username);
+                newUser.set("password", hashedPassword);
+                newUser.set("role", "professor"); 
+                newUser.saveIt();
+
+                int userId = newUser.getInteger("id");
+
+                //insercion para profesor 
+                Professor prof = new Professor();
+                prof.set("id", userId);
+                prof.set("nombre", nombre);
+                prof.set("apellido", apellido);
+                prof.set("correo", correo);
+                prof.set("dni", dni);
+                prof.insert();
+
+                res.redirect("/dashboard?message=Profesor creado. Usuario: " 
+                             + username + " Contrasenia: " + last4);
                 return "";
 
             } catch (Exception e) {
-
-                System.err.println("Error al registrar la cuenta: " + e.getMessage());
-                e.printStackTrace(); 
-                res.status(500); 
-                res.redirect("/professsor/create?error=Error interno al crear la cuenta. Intente de nuevo.");
-                return ""; 
+                e.printStackTrace();
+                res.redirect("/professor/create?error=Error inesperado.");
+                return "";
             }
         });
 
@@ -272,7 +322,7 @@ public class App {
             // Validaciones básicas: campos de usuario y contraseña no pueden ser nulos o vacíos.
             if (username == null || username.isEmpty() || plainTextPassword == null || plainTextPassword.isEmpty()) {
                 res.status(400); // Bad Request.
-                model.put("errorMessage", "El nombre de usuario y la contraseña son requeridos.");
+                model.put("errorMessage", "El nombre de usuario y la contrasenia son requeridos.");
                 return new ModelAndView(model, "login.mustache"); // Renderiza la plantilla de login con error.
             }
 
@@ -282,7 +332,7 @@ public class App {
             // Si no se encuentra ninguna cuenta con ese nombre de usuario.
             if (ac == null) {
                 res.status(401); // Unauthorized.
-                model.put("errorMessage", "Usuario o contraseña incorrectos."); // Mensaje genérico por seguridad.
+                model.put("errorMessage", "Usuario o contrasenia incorrectos."); // Mensaje genérico por seguridad.
                 return new ModelAndView(model, "login.mustache"); // Renderiza la plantilla de login con error.
             }
 
@@ -311,7 +361,7 @@ public class App {
                 // Contraseña incorrecta.
                 res.status(401); // Unauthorized.
                 System.out.println("DEBUG: Intento de login fallido para: " + username);
-                model.put("errorMessage", "Usuario o contraseña incorrectos."); // Mensaje genérico por seguridad.
+                model.put("errorMessage", "Usuario o contrasenia incorrectos."); // Mensaje genérico por seguridad.
                 return new ModelAndView(model, "login.mustache"); // Renderiza la plantilla de login con error.
             }
         }, new MustacheTemplateEngine()); // Especifica el motor de plantillas para esta ruta POST.
@@ -329,7 +379,7 @@ public class App {
             // --- Validaciones básicas ---
             if (name == null || name.isEmpty() || password == null || password.isEmpty()) {
                 res.status(400); // Bad Request.
-                return objectMapper.writeValueAsString(Map.of("error", "Nombre y contraseña son requeridos."));
+                return objectMapper.writeValueAsString(Map.of("error", "Nombre y contrasenia son requeridos."));
             }
 
             try {
@@ -339,14 +389,14 @@ public class App {
                 // En una aplicación real, las contraseñas DEBEN ser hasheadas (ej. con BCrypt)
                 // ANTES de guardarse en la base de datos, NUNCA en texto plano.
                 // (Nota: El código original tenía la contraseña en texto plano aquí.
-                // Se recomienda usar `BCrypt.hashpw(password, BCrypt.gensalt())` como en la ruta '/user/new').
+                // Se recomienda usar BCrypt.hashpw(password, BCrypt.gensalt()) como en la ruta '/user/new').
                 newUser.set("name", name); // Asigna el nombre al campo 'name'.
                 newUser.set("password", password); // Asigna la contraseña al campo 'password'.
                 newUser.saveIt(); // Guarda el nuevo usuario en la tabla 'users'.
 
                 res.status(201); // Created.
                 // Devuelve una respuesta JSON con el mensaje y el ID del nuevo usuario.
-                return objectMapper.writeValueAsString(Map.of("message", "Usuario '" + name + "' registrado con éxito.", "id", newUser.getId()));
+                return objectMapper.writeValueAsString(Map.of("message", "Usuario '" + name + "' registrado con exito.", "id", newUser.getId()));
 
             } catch (Exception e) {
                 // Si ocurre cualquier error durante la operación de DB, se captura aquí.
